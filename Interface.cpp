@@ -98,7 +98,7 @@ namespace Interface{
             clrscr;
             cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
             getWaveInfo(as);
-            cout << "1. Thay doi file" << endl;
+            cout << "1. Chon file" << endl;
             cout << "2. Thay doi Sampling Rate" << endl;
             cout << "3. Thay doi Bit Depth" << endl;
             cout << "4. Thay doi thay doi Channel Mode" << endl;
@@ -194,7 +194,7 @@ namespace Interface{
         cout << "Do sau cua Bit: " << as.getBitDepth() << endl;
         cout << "Tan so lay mau: " << as.getSampleRate() << endl;
         cout << "So luong sample: " << as.getSampleSize() << endl;
-        cout << "Thoi luong file: " << precision(4) << as.getDurations() << endl;
+        cout << "Thoi luong file: " << precision(4) << as.getDuration() << endl;
         cout << "=============================================================" << endl;
         cout << "===============================Header========================" << endl;
         if (as.getHeaderType() == 1){
