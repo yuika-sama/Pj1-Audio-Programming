@@ -50,13 +50,13 @@
 |			- **DrawSound.cpp**: -mwindows
 	- **Hệ thống thư mục:** Cần triển khai hệ thông thư mục theo biểu đồ sau:
 		```
-Folder nguồn: 
-│ "code files.cpp"
-├── resources
-│   ├── sounds
-│
-└── output
-│
-└── matlab
-```
+		Folder nguồn: 
+		│ "code files.cpp"
+		├── resources
+		│   ├── sounds
+		│
+		└── output
+		│
+		└── matlab
+		```
 - **Build:** Sau khi thêm linker phù hợp cho File, nhấn F9(Build) để kiểm tra lỗi xuất hiện. Nếu không có, nhấn F12 để chạy chương trình
