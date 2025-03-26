@@ -273,10 +273,10 @@ namespace Interface{
         int v;
         clrscr;
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
-        cout << "\tNhap BitDepth: ";
+        cout << "\tNhap Sample Rate: ";
         cin >> v;
         as.setSampleRate(v);
-        cout << "\tBitDepth hien tai: " << as.getBitDepth() << "Hz" << endl;
+        cout << "\tSample Rate hien tai: " << as.getSampleRate() << "Hz" << endl;
         system("pause");
         return;
     }
@@ -285,10 +285,10 @@ namespace Interface{
         int v;
         clrscr;
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
-        cout << "\tNhap tan so: ";
+        cout << "\tNhap Bit Depth: ";
         cin >> v;
         as.setBitDepth(v);
-        cout << "\tTan so mau hien tai: " << as.getSampleRate() << "Hz" << endl;
+        cout << "\tBit Depth hien tai: " << as.getBitDepth() << "Hz" << endl;
         system("pause");
         return;
     }

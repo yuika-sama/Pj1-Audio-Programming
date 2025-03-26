@@ -16,14 +16,31 @@
 #include <direct.h>
 main(){
 	
-	const char *dir1Name = "resources/sounds";
+	const char *dir1Name = "resources";
 	const char *dir2Name = "output";
 	
-	if (_mkdir(dir1Name) == 0 and _mkdir(dir2Name) == 0){
-		std::cout << "Tao thu muc khoi dau thanh cong" << std::endl;
+	if (mkdir(dir1Name) == 0){
+		std::cout << "Tao thu muc resources thanh cong" << std::endl;
 		system("pause");
 	} else {
-		std::cout << "Thu muc da ton tai hoac co loi xay ra khi thuc thi" << std::endl;
+		std::cout << "Thu muc resources da ton tai hoac co loi xay ra khi thuc thi" << std::endl;
+		system("pause");
+	}
+	
+	const char *dir3Name = "resources/sounds";
+	if (mkdir(dir3Name) == 0){
+		std::cout << "Tao thu muc resources/sounds thanh cong" << std::endl;
+		system("pause");
+	} else {
+		std::cout << "Thu muc resources/sounds da ton tai hoac co loi xay ra khi thuc thi" << std::endl;
+		system("pause");
+	}
+	
+	if (mkdir(dir2Name) == 0){
+		std::cout << "Tao thu muc output thanh cong" << std::endl;
+		system("pause");
+	} else {
+		std::cout << "Thu muc output da ton tai hoac co loi xay ra khi thuc thi" << std::endl;
 		system("pause");
 	}
 	
