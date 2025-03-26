@@ -132,7 +132,7 @@ void writeMP3DataToFile(const std::string& outputTxt, const std::vector<double>&
     }
 
     for (double sample : samples) {
-        outFile << sample << " ";
+        outFile << sample << '\n';
     }
 
     outFile.close();

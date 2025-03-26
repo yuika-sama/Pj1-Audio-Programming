@@ -141,7 +141,7 @@ public:
     
 	double calculateWAVDuration() {
 	    // Lấy thông tin từ header
-	    WAVHeader header = getWavHeader();
+	    WAVHeader header = getWavHeader();  
 	    uint32_t sampleRate = header.sample_rate;
 	    uint32_t dataSize = header.data_bytes;
 	    uint16_t numChannels = header.num_channels;
@@ -479,7 +479,7 @@ public:
 	    }
 	
 	    for (const auto& sample : getSamples()) {
-	        outputFile << sample << " ";
+	        outputFile << sample << '\n';
 	    }
 	
 	    outputFile.close();
@@ -588,7 +588,7 @@ public:
 
         for (uint8_t byte : fileData) {
             double sample = byte / 255.0;
-            outFile << sample << " ";
+            outFile << sample << '\n';
         }
     
         outFile.close();

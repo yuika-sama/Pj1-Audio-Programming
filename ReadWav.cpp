@@ -99,7 +99,7 @@ void writeToFile(const std::vector<double>& audio_data, const std::string& outpu
     }
 
     for (const auto& sample : audio_data) {
-        outputFile << sample << " ";
+        outputFile << sample << '\n';
     }
 
     outputFile.close();
