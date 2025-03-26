@@ -111,8 +111,8 @@ namespace Interface{
             cout << "11. Tuong quan cheo" << endl;
             cout << "12. Upsampling" << endl;
             cout << "13. Downsampling" << endl;
-            cout << "14. Nghe file am thanh" << endl;
-            cout << "15. Ghi ra file" << endl;
+            cout << "14. Nghe file am thanh" << endl; //-> tach file rieng
+            cout << "15. Ghi ra file" << endl; //fix 
             cout << "0. Quay ve" << endl;
             cout << "=============================================================" << endl;
             cout << "Lua chon: ";
@@ -174,7 +174,8 @@ namespace Interface{
                 break;
             case 14:
                 /* code */
-                listenWave(as);
+                cout << "Chuc nang nay chua ho tro" << endl;
+                system("pause");
                 break;
             case 15:
                 /* code */
@@ -274,7 +275,7 @@ namespace Interface{
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
         cout << "\tNhap BitDepth: ";
         cin >> v;
-        as.setBitDepth(v);
+        as.setSampleRate(v);
         cout << "\tBitDepth hien tai: " << as.getBitDepth() << "Hz" << endl;
         system("pause");
         return;
@@ -286,7 +287,7 @@ namespace Interface{
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
         cout << "\tNhap tan so: ";
         cin >> v;
-        as.setSampleRate(v);
+        as.setBitDepth(v);
         cout << "\tTan so mau hien tai: " << as.getSampleRate() << "Hz" << endl;
         system("pause");
         return;
@@ -320,30 +321,13 @@ namespace Interface{
         }
     }
 
-    void listenWave(AS &as){
-        bool check = true;
-        char c;
-        while(check){
-            clrscr;
-            cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
-            getWaveInfo(as);
-            as.play();
-            cout << "Ket thuc!";
-            cout << "\tBan co muon nghe lai?(Y/y = yes, N/n = no)";
-                cin >> c;
-                if (c == 'Y' or c == 'y'){
-                    check = true;
-                } else {
-                    check = false;
-                }
-        }
-    }
-
     void reverseSamples(AS &as){
         clrscr;
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
         cout << "\tDang xu li..." << endl;
-        as = as.reverse();
+        AS res = as.reverse();	
+		res.setData(as);
+		as = res;		
         cout << "\tDao nguoc tin hieu thanh cong!" << endl;
         system("pause");
     }
@@ -378,6 +362,7 @@ namespace Interface{
             as = as * n;
             cout << "\tXu ly thanh cong!" << endl;
             system("pause");
+            return;
         }
     }
 
@@ -390,7 +375,9 @@ namespace Interface{
         cout << "\tNhap hang so(so nguyen): ";
         cin >> n;
         cout << "\tDang xu ly..." << endl;
-        as.timeShift(n);
+        AS res = as.timeShift(n);	
+		res.setData(as);
+		as = res;
         cout << "\tXu ly thanh cong!" << endl;
         system("pause");
     }
@@ -434,16 +421,13 @@ namespace Interface{
         clrscr;
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
         waves[0] = as + waves[n];
-        cout << "Hoan thanh. Ban co muon nghe thu hay ghi ra file?" << endl;
-        cout << "1. Nghe thu" << endl;
-        cout << "2. Ghi ra file" << endl;
+        waves[0].setData(as);
+        cout << "Hoan thanh. Ban co muon ghi ra file?" << endl;
+        cout << "1. Ghi ra file" << endl;
         cout << "0. Khong lam gi" << endl;
         cout << "Lua chon: " << endl;
         cin >> c;
         if (c == 1){
-            listenWave(waves[0]);
-            cout << "\tPhat tin hieu xong";
-        } else if (c == 2){
             writeToFile(waves[0]);
         }
     }
@@ -455,17 +439,14 @@ namespace Interface{
         clrscr;
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
         waves[0] = as * waves[n];
+        waves[0].setData(as);
         cout << "Hoan thanh. Ban co muon nghe thu hay ghi ra file?" << endl;
-        cout << "1. Nghe thu" << endl;
-        cout << "2. Ghi ra file" << endl;
+        cout << "1. Ghi ra file" << endl;
         cout << "0. Khong lam gi" << endl;
         cout << "Lua chon: " << endl;
         cin >> c;
         if (c == 1){
-            listenWave(waves[0]);
-            cout << "\tPhat tin hieu xong";
-        } else if (c == 2){
-            writeToFile(waves[0]);
+             writeToFile(waves[0]);
         }
     }
 
@@ -476,16 +457,13 @@ namespace Interface{
         clrscr;
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
         waves[0] = as.convolve(waves[n]);
+        waves[0].setData(as);
         cout << "Hoan thanh. Ban co muon nghe thu hay ghi ra file?" << endl;
-        cout << "1. Nghe thu" << endl;
-        cout << "2. Ghi ra file" << endl;
+        cout << "1. Ghi ra file" << endl;
         cout << "0. Khong lam gi" << endl;
         cout << "Lua chon: " << endl;
         cin >> c;
         if (c == 1){
-            listenWave(waves[0]);
-            cout << "\tPhat tin hieu xong";
-        } else if (c == 2){
             writeToFile(waves[0]);
         }
     }
@@ -497,16 +475,13 @@ namespace Interface{
         clrscr;
         cout << "Chuong trinh dieu chinh am thanh - Sound Equalizer Program" << endl;
         waves[0] = as.crossCorrelation(waves[n]);
+        waves[0].setData(as);
         cout << "Hoan thanh. Ban co muon nghe thu hay ghi ra file?" << endl;
-        cout << "1. Nghe thu" << endl;
-        cout << "2. Ghi ra file" << endl;
+        cout << "1. Ghi ra file" << endl;
         cout << "0. Khong lam gi" << endl;
         cout << "Lua chon: " << endl;
         cin >> c;
         if (c == 1){
-            listenWave(waves[0]);
-            cout << "\tPhat tin hieu xong";
-        } else if (c == 2){
             writeToFile(waves[0]);
         }
     }
@@ -520,7 +495,9 @@ namespace Interface{
         cout << "\tNhap hang so(so nguyen): ";
         cin >> n;
         cout << "\tDang xu ly..." << endl;
-        as.upSampling(n);
+        AS res = as.upSampling(n);	
+		res.setData(as);
+		as = res;
         cout << "\tXu ly thanh cong!" << endl;
         system("pause");
     }
@@ -534,7 +511,9 @@ namespace Interface{
         cout << "\tNhap hang so(so nguyen): ";
         cin >> n;
         cout << "\tDang xu ly..." << endl;
-        as.downSampling(n);
+        AS res = as.downSampling(n);	
+		res.setData(as);
+		as = res;
         cout << "\tXu ly thanh cong!" << endl;
         system("pause");
     }
@@ -558,10 +537,16 @@ namespace Interface{
                     filename += ".txt";
                     if (as.getHeaderType() == 1){
                         as.writeToFileWAV(filename);
+                        system("pause");
+                        return;
                     } else if (as.getHeaderType() == 2){
                         as.writeMP3DataToFile(filename, as.getSamples());
+                        system("pause");
+                        return;
                     } else {
                         cout << "Can't write" << endl;
+                        system("pause");
+                        return;
                     }
                     break;
                 default:

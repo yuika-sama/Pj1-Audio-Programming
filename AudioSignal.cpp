@@ -185,6 +185,28 @@ public:
     void setHeaderType(int headerType) {
     	this -> headerType = headerType;
 	}
+	
+	void setData(AudioSignal &as){
+		// Set header
+		this -> headerType = as.getHeaderType();
+		if (this -> headerType == 1){
+			wavHeader = as.getWavHeader();
+		} else if (this -> headerType == 2){
+			mp3Header = as.getMp3Header();
+		} else {
+			std::cerr << "Khong xac dinh duoc dinh dang file" << std::endl;
+		}
+		
+		// Set Filename
+		setFileName(as.getFileName());
+		
+		// Set Duration
+		
+		// Set Basic info
+		sampleRate = as.getSampleRate();
+		bitDepth = as.getBitDepth();
+		channels = as.getChannels();
+	}
 
     //End of Getter/setter
 
@@ -448,68 +470,56 @@ public:
         file.close();
     }
 
-    // Xuất file tín hiệu của WAV
-    void writeToFileWAV(std::string &output_filename){
-        output_filename = "output/" + output_filename;
-        std::ofstream outputFile(output_filename, std::ios::binary); // Thêm chế độ binary
-        // Ghi lại header và dữ liệu nhị phân
-        WAVHeader header = createWAVHeader();
-        outputFile.write(reinterpret_cast<const char*>(&header), sizeof(WAVHeader));
-        
-        for (const auto& sample : samples) {
-            int16_t intSample = static_cast<int16_t>(sample * 32767.0);
-            outputFile.write(reinterpret_cast<const char*>(&intSample), sizeof(int16_t));
-        }
-    }
+    void writeToFileWAV(std::string& output_filename) {
+    	std::string outputPath = "output/" + output_filename;
+	    std::ofstream outputFile(outputPath);
+	    if (!outputFile.is_open()) {
+	        std::cerr << "Error: Could not open output file: " << output_filename << std::endl;
+	        return;
+	    }
+	
+	    for (const auto& sample : getSamples()) {
+	        outputFile << sample << " ";
+	    }
+	
+	    outputFile.close();
+	    std::cout << "Successfully wrote " << samples.size() << " samples to " << output_filename << std::endl;
+	}
+
 
     // Đọc file MP3
     void readMP3File(const std::string& filename) {
         resetAttributes();
         std::ifstream file(filename, std::ios::binary);
         if (!file.is_open()) {
-            throw std::runtime_error("Khong the mo file MP3: " + filename);
+            std::cerr << "Could not open file: " << filename << std::endl;
+            return ;
         }
-    
-        // Đọc toàn bộ file vào buffer
+
         file.seekg(0, std::ios::end);
         size_t fileSize = file.tellg();
         file.seekg(0, std::ios::beg);
+
         std::vector<uint8_t> fileData(fileSize);
         file.read(reinterpret_cast<char*>(fileData.data()), fileSize);
         file.close();
-    
-        // Tìm frame MP3 đầu tiên
-        size_t frameStart = findMP3Frame(fileData);
-        if (frameStart == fileSize) {
-            throw std::runtime_error("Khong tim thay frame MP3 hop le");
-        }
-    
-        // Đọc header của frame đầu tiên
+
+
+        size_t offset = 0;
         MP3FrameHeader header;
-        if (!parseFrameHeader(fileData, frameStart, header)) {
-            throw std::runtime_error("Không thể parse frame header MP3");
-        }
-    
+        double totalDuration = 0.0;
+        
         // Thiết lập các thuộc tính audio
         setSampleRate(sample_rate_table[header.sampling_rate_index]);
-        setBitDepth(16); // MP3 thường được giải mã thành PCM 16-bit
+        setBitDepth(16);
         setChannels(header.channel_mode == 3 ? 1 : 2);
         setMp3Header(header);
         setFileName(filename);
         setHeaderType(2);
         
-    
         // Đọc và giải mã các frame MP3
-        size_t offset = frameStart;
-        bool foundFrame = false;
-        double totalDuration = 0.0;
-        std::vector<double> normalizedData;
         while (offset < fileSize - 4) {
             if (parseFrameHeader(fileData, offset, header)) {
-                if (!foundFrame) {
-                    foundFrame = true;
-                }
-    
                 if (header.version == 3 && header.layer == 1) { // MPEG Version 1, Layer 3
                     int bitrate = bitrate_table[header.bitrate_index];
                     int sampleRate = sample_rate_table[header.sampling_rate_index];
@@ -518,9 +528,11 @@ public:
                         double frameDuration = 1152.0 / sampleRate;
                         totalDuration += frameDuration;
     
-                        // Normalize and store frame data
-                        for (int i = 0; i < frameSize && offset + i < fileSize; ++i) {
-                            normalizedData.push_back(fileData[offset + i] / 255.0);
+                        // Đẩy các mẫu vào vector
+                        for (int i = 0; i < frameSize; i++) {
+                            if (offset + i < fileSize) {
+                                samples.push_back(static_cast<double>(fileData[offset + i]) / 255.0);
+                            }
                         }
     
                         offset += frameSize;
@@ -532,13 +544,26 @@ public:
                 }
             } else {
                 offset++;
-            }
-        }
-        if (!foundFrame) {
-            std::cerr << "Could not find any valid MP3 frame" << std::endl;
-            return;
-        }
+            } 
+    
+		}
         setMp3Duration(totalDuration);
+	}
+    
+    std::vector<double> decodeMP3Frame(const std::vector<uint8_t>& data, size_t offset, int frameSize, const MP3FrameHeader& header) {
+        std::vector<double> decodedSamples;
+        for (int i = 4; i < frameSize; i++) {
+            double sample = (static_cast<double>(data[offset + i]) - 128.0) / 128.0;
+            decodedSamples.push_back(sample);
+        }
+        return decodedSamples;
+    }
+    
+    int calculateFrameSize(const MP3FrameHeader& header) {
+        int bitrate = bitrate_table[header.bitrate_index] * 1000;
+        int sampleRate = sample_rate_table[header.sampling_rate_index];
+        int padding = header.padding ? 1 : 0;
+        return ((144 * bitrate) / sampleRate) + padding;
     }
     
     size_t findMP3Frame(const std::vector<uint8_t>& data) {
@@ -549,23 +574,7 @@ public:
         }
         return data.size();
     }
-    
-    int calculateFrameSize(const MP3FrameHeader& header) {
-        int bitrate = bitrate_table[header.bitrate_index] * 1000;
-        int sampleRate = sample_rate_table[header.sampling_rate_index];
-        int padding = header.padding ? 1 : 0;
-        return ((144 * bitrate) / sampleRate) + padding;
-    }
-    
-    std::vector<double> decodeMP3Frame(const std::vector<uint8_t>& data, size_t offset, int frameSize, const MP3FrameHeader& header) {
-        std::vector<double> decodedSamples;
-        for (int i = 4; i < frameSize; i++) {
-            double sample = (data[offset + i] - 128) / 128.0;
-            decodedSamples.push_back(sample);
-        }
-        return decodedSamples;
-    }
-    
+       
     
 
     //Xuất file tín hiệu của MP3
@@ -585,74 +594,6 @@ public:
         outFile.close();
         std::cout << "Ghi thanh cong vao file " << outputTxt << std::endl;
     }
-
-    //Phát âm thanh
-    void play() {
-        if (samples.empty()) {
-            std::cerr << "Khong co du lieu am thanh de phat." << std::endl;
-            return;
-        }
-    
-        if (headerType == 1) { // WAV
-            // Tạo WAV header
-            WAVHeader header = createWAVHeader();
-            
-            // Tính kích thước tổng cộng của dữ liệu
-            DWORD totalSize = sizeof(WAVHeader) + header.data_bytes;
-            
-            // Tạo buffer chứa header và dữ liệu âm thanh
-            std::vector<BYTE> buffer(totalSize);
-            
-            // Copy header vào buffer
-            memcpy(buffer.data(), &header, sizeof(WAVHeader));
-            
-            // Copy dữ liệu âm thanh vào buffer
-            for (size_t i = 0; i < samples.size(); ++i) {
-                int16_t sample = static_cast<int16_t>(samples[i] * 32767.0f);
-                memcpy(buffer.data() + sizeof(WAVHeader) + i * 2, &sample, 2);
-            }
-            
-            // Phát âm thanh WAV
-            if (PlaySound(reinterpret_cast<LPCSTR>(buffer.data()), NULL, SND_MEMORY | SND_SYNC) == FALSE) {
-                std::cerr << "Loi khi phat am thanh WAV." << std::endl;
-            }
-        } 
-        else if (headerType == 2) { // MP3
-            // Tạo file tạm thời để lưu dữ liệu MP3
-            std::string tempFileName = "temp_audio.mp3";
-            std::ofstream tempFile(tempFileName, std::ios::binary);
-            if (!tempFile.is_open()) {
-                std::cerr << "Khong the tao file tam thoi." << std::endl;
-                return;
-            }
-            
-            // Ghi dữ liệu MP3 vào file tạm thời
-            for (const auto& sample : samples) {
-                int16_t intSample = static_cast<int16_t>(sample * 32767.0f);
-                tempFile.write(reinterpret_cast<const char*>(&intSample), sizeof(int16_t));
-            }
-            tempFile.close();
-            
-            // Sử dụng MCI để phát MP3
-            std::string command = "open \"" + tempFileName + "\" type mpegvideo alias mp3";
-            mciSendString(command.c_str(), NULL, 0, NULL);
-            command = "play mp3 wait";
-            if (mciSendString(command.c_str(), NULL, 0, NULL) == 0) {
-                std::cerr << "Loi khi phat am thanh MP3." << std::endl;
-            }
-            
-            // Đóng file sau khi phát xong
-            command = "close mp3";
-            mciSendString(command.c_str(), NULL, 0, NULL);
-            
-            // Xóa file tạm thời
-            std::remove(tempFileName.c_str());
-        } 
-        else {
-            std::cerr << "Loai am thanh khong ho tro." << std::endl;
-        }
-    }
-    
 
     AudioSignal& operator=(const AudioSignal& other) {
 	    if (this == &other) return *this;
